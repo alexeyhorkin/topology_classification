@@ -1,5 +1,7 @@
-# topology_classification
-Code for paper
+# Topology classification
+The repository contains сode for paper - TBA
+
+![demo image](resources/picture_from_paper.png)
 
 ## Instalation
 
