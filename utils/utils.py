@@ -70,6 +70,39 @@ def create_dataset(folders, verbose=False, feature_nums=16, n='both'):
     return X, Y
 
 
+def helper(num):
+    n_needed = 'both'
+    if num % 2 == 0:
+        n_needed = 'n+1'
+        N = f'N2={num - 1}'
+    else:
+        n_needed = 'n'
+        N = f'N2={num}'
+    return N, n_needed
+
+
+def make_merged_dataset_by_N(data_path, nums, n_feat=16, normalize=True):
+    seed_all()
+    X_merged, Y_merged = [], []
+    for num in nums:
+        N, n = helper(num)
+        FOLDERS = [p_join(os.path.abspath(data_path), item) for item in os.listdir(data_path) if N in item]
+        X, Y = create_dataset(FOLDERS, feature_nums=n_feat, n=n, verbose=False)
+#         X = normalize_data(X)   ### Attention! may provide better results ???
+        X_merged.append(X)
+        Y_merged.append(Y)
+
+    X, Y = np.concatenate(X_merged, axis=0), np.concatenate(Y_merged, axis=0)
+    indexes_for_shuffle = np.random.permutation(np.arange(X.shape[0]))
+    X = X[indexes_for_shuffle]
+    Y = Y[indexes_for_shuffle]
+    
+    print(f'Dataset for nums:{nums} was created')
+    if normalize:
+        X = normalize_data(X)
+    return X, Y
+
+
 def create_dataloaders(X, Y, cpu_workers=2, train_bs=64, test_bs=64):
     from sklearn.model_selection import train_test_split
 
