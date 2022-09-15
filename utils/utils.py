@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from torch.utils.data import TensorDataset
 from torch.utils.data import DataLoader
 
+import matplotlib.pyplot as plt
 
 
 def seed_all(seed=42):
@@ -271,3 +272,18 @@ def greed_searc_cv(model_class, params, config, X, Y):
 def count_params(model):
     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'[INFO]: Model "{model.__class__.__name__}" has {pytorch_total_params} trainable parameters')
+
+
+######################################
+######    GRAPH PLOT METHODS     #####
+######################################
+
+def plot_matshow(df, x_labels, y_labels, cmap_name='YlGn'):
+    fig, ax = plt.subplots()
+    cax = ax.matshow(df, cmap=plt.get_cmap(cmap_name))
+    fig.colorbar(cax)
+    ax.set_xticklabels(x_labels)
+    ax.set_yticklabels(y_labels)
+    ax.set_ylabel('Train')
+    ax.set_xlabel('Test')
+    return fig, ax
