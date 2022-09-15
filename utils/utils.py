@@ -1,4 +1,4 @@
-'''All useful utils here.'''
+'''All useful utils here'''
 
 import os
 import random
@@ -15,7 +15,9 @@ from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
 
-def seed_all(seed=42):
+def seed_all(seed: int = 42):
+    '''Just to seed everything'''
+
     random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -31,7 +33,18 @@ def seed_all(seed=42):
 ##      DATA PROCESSING FUNCTIONS      ##
 #########################################
 
-def create_dataset(folders, verbose=False, feature_nums=16, n='both'):
+def create_dataset(folders: list[str], verbose: bool = False, feature_nums: int = 16, n: str = 'both'):
+    '''
+    Dataset creation from list of folders.
+    Args:
+        folders: Folders will be used for dataset joining
+        feature_nums: # Number of central features
+        n: One folder contains n and n+1 feature, if n, last one is equal -1
+        verbose: Turn of or turn on printing
+    Returns:
+        X, Y - nparray arrays with data and labels respectively
+    '''
+
     X_merged, Y_merged = [], []
     for folder_path in tqdm(folders):
         X_path = p_join(folder_path, '2nd_exp_Input.txt')
@@ -71,7 +84,16 @@ def create_dataset(folders, verbose=False, feature_nums=16, n='both'):
     return X, Y
 
 
-def helper(num):
+def helper(num: int):
+    '''
+    Just a little handle function for create_dataset function :)
+    Args:
+        num: An integer representing the number of waveguides in the system
+    Returns:
+        N: Folder label
+        n_needed: For n, or n+1 features selecting
+    '''
+
     n_needed = 'both'
     if num % 2 == 0:
         n_needed = 'n+1'
@@ -82,7 +104,20 @@ def helper(num):
     return N, n_needed
 
 
-def make_merged_dataset_by_N(data_path, nums, n_feat=16, normalize=True):
+def make_merged_dataset_by_N(data_path: str,
+                             nums: list[int],
+                             n_feat: int = 16,
+                            normalize: bool = True):
+    '''
+    Create dataset by different N
+    Args:
+        data_path: Path to the data folder
+        nums: List of integer, represents numbers of waveguides in the system
+              that dataset should contain
+    Returns:
+        X, Y - nparray arrays with data and labels respectively
+    '''
+
     seed_all()
     X_merged, Y_merged = [], []
     for num in nums:
@@ -104,7 +139,15 @@ def make_merged_dataset_by_N(data_path, nums, n_feat=16, normalize=True):
     return X, Y
 
 
-def create_dataloaders(X, Y, cpu_workers=2, train_bs=64, test_bs=64):
+def create_dataloaders(X: np.ndarray,
+                       Y: np.ndarray,
+                       cpu_workers: int = 2,
+                       train_bs: int = 64,
+                       test_bs: int = 64):
+    '''
+    Create Pytorch dataloder from X and Y numpy arrays.
+    '''
+
     from sklearn.model_selection import train_test_split
 
     X_train, X_test, Y_train, Y_test = train_test_split(
@@ -129,13 +172,21 @@ def create_dataloaders(X, Y, cpu_workers=2, train_bs=64, test_bs=64):
     return train_dataloader, test_dataloader
 
 
-def normalize_data(X):
+def normalize_data(X: np.ndarray) -> np.ndarray:
+    '''
+    Data normalization, each feature will have zero mean and one std
+    '''
+
     mean = X.mean(0)
     std = X.std(0)
     return (X - mean) / std
 
 
 def select_n_center_features(data: np.ndarray, n_features: int, verbose: bool = False) -> np.ndarray:
+    '''
+    Cut n central features from numpy array
+    '''
+
     from copy import deepcopy
 
     total_components = data.shape[1]
@@ -145,7 +196,11 @@ def select_n_center_features(data: np.ndarray, n_features: int, verbose: bool = 
         print(f'Selected features from indexes:  [{start}, {start + n_features})')
     return res
 
-def map_classes(i, j):
+def map_classes(i: int, j: int) -> int:
+    '''
+    Mapping to the labels (class)
+    '''
+
     if i == 0 and j == 0:
         return 0
     elif i == 0 and j == 1:
@@ -156,13 +211,15 @@ def map_classes(i, j):
         return 3
 
 
-
 #########################################
 ## TRAINING AND TESTING FUNCTIONS (DL) ##
 #########################################
 
 def train_epoch(net, optimizer, dataloader, criterion, device):
-    """Perform one traing epoch"""
+    '''
+    Perform one traing epoch
+    '''
+
     running_loss = 0.0
     net.train(True)
     for X, y in tqdm(dataloader):
@@ -194,6 +251,10 @@ def test_model(net, dataloader, device):
 
 
 def run_training(net, optimizer, config, train_loader, test_loader=None):
+    '''
+    Perform the whole training with hyperparameters from config
+    '''
+
     ### Get hyperparams from config
     epochs = config.get('ephs', 10)
     device = config.get('device', 'cpu')
@@ -234,7 +295,11 @@ def run_training(net, optimizer, config, train_loader, test_loader=None):
 from sklearn.model_selection import cross_val_score, cross_validate
 from sklearn.model_selection import GridSearchCV
 
-def calc_ml_method(model, config, X, Y):
+def calc_ml_method(model, config: dict, X: np.ndarray, Y: np.ndarray):
+    '''
+    Perform cross validation of given sklearn model on X, Y dataset
+    '''
+
     res = {}
 
     scoring = config.get('scoring', 'accuracy')
@@ -246,7 +311,11 @@ def calc_ml_method(model, config, X, Y):
         
     return res
 
-def greed_searc_cv(model_class, params, config, X, Y):
+def greed_searc_cv(model_class, params, config: dict, X: np.ndarray, Y: np.ndarray):
+    '''
+    Grid search for hyperparams of sklearn model on X,Y dataset
+    '''
+
     res = {}
 
     scoring = config.get('scoring', 'accuracy')
@@ -270,6 +339,9 @@ def greed_searc_cv(model_class, params, config, X, Y):
     return res
 
 def count_params(model):
+    '''
+    Pytorch model parametr counting
+    '''
     pytorch_total_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f'[INFO]: Model "{model.__class__.__name__}" has {pytorch_total_params} trainable parameters')
 
@@ -279,6 +351,10 @@ def count_params(model):
 ######################################
 
 def plot_matshow(df, x_labels, y_labels, cmap_name='YlGn'):
+    '''
+    Handle function for matshow plot
+    '''
+
     fig, ax = plt.subplots()
     cax = ax.matshow(df, cmap=plt.get_cmap(cmap_name))
     fig.colorbar(cax)
