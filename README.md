@@ -3,7 +3,6 @@ The repository contains сode for ML and DL used in paper - TBA.
 
 ## Content:
 * [notebooks](./notebooks) - contains scripts (jupyter notebooks) for training and testing algoritms
-
 * [utils](./utils) - contains defenition of DL models and useful functions for data processing
 
 ![demo image](resources/picture_from_paper.png)
